@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>AI 暖心伴成长</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap');
+
+  :root {
+    --bg: #f5f2ec;
+    --card: #fffef9;
+    --purple: #7c6fe0;
+    --purple-light: #ede9fb;
+    --green: #3a9e7a;
+    --green-light: #e4f5ee;
+    --text: #2a2826;
+    --muted: #8a8680;
+    --border: #e8e3d8;
+    --accent: #d4a853;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  /* 顶部装饰 */
+  .hero {
+    background: linear-gradient(160deg, #2d2560 0%, #5b4fcf 60%, #8b7ce8 100%);
+    padding: 40px 20px 50px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -20px; left: -20px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+  .hero-tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.9);
+    font-size: 11px;
+    letter-spacing: .12em;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .hero h1 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+  .hero p {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.6;
+  }
+  .hero-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 20px;
+  }
+  .hero-dots span {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    transition: background .3s;
+  }
+  .hero-dots span.active { background: #fff; }
+
+  /* 进度条 */
+  .progress-wrap {
+    background: var(--card);
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .progress-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--purple), #a896f0);
+    border-radius: 4px;
+    transition: width .4s cubic-bezier(.4,0,.2,1);
+    width: 0%;
+  }
+  .progress-text {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* 问题区域 */
+  .questions { padding: 20px 16px; }
+
+  .q-block {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 20px 18px;
+    margin-bottom: 14px;
+    border: 1px solid var(--border);
+    transition: box-shadow .2s;
+  }
+  .q-block.answered { border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-light); }
+
+  .q-num {
+    font-size: 11px;
+    color: var(--purple);
+    font-weight: 600;
+    letter-spacing: .08em;
+    margin-bottom: 6px;
+  }
+  .q-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+  .q-title .emoji { font-size: 18px; margin-right: 4px; }
+
+  /* 选项 */
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .options.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .opt {
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 11px 14px;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg);
+    cursor: pointer;
+    transition: all .2s;
+    user-select: none;
+    line-height: 1.4;
+    text-align: left;
+  }
+  .opt:active { transform: scale(.97); }
+  .opt.selected {
+    border-color: var(--purple);
+    background: var(--purple-light);
+    color: var(--purple);
+    font-weight: 500;
+  }
+  .opt .opt-emoji { margin-right: 6px; }
+
+  /* 生成区域 */
+  .result-section {
+    display: none;
+    padding: 0 16px 20px;
+  }
+  .result-section.show { display: block; }
+
+  .result-card {
+    background: var(--card);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .result-header {
+    background: linear-gradient(135deg, #2d2560, #5b4fcf);
+    padding: 18px 20px;
+    color: #fff;
+  }
+  .result-header h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+  .result-header p { font-size: 12px; opacity: .75; }
+
+  .result-body { padding: 18px 20px; }
+  .result-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    letter-spacing: .08em;
+    margin-bottom: 8px;
+  }
+  .result-text {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13.5px;
+    line-height: 1.9;
+    color: var(--text);
+    border: 1px solid var(--border);
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .copy-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 14px;
+    padding: 15px;
+    background: var(--purple);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    font-family: inherit;
+  }
+  .copy-btn:active { transform: scale(.97); background: #6558c8; }
+  .copy-btn.copied { background: var(--green); }
+
+  .next-step {
+    background: var(--green-light);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--green);
+    line-height: 1.7;
+    border: 1px solid #b8e8d6;
+  }
+  .next-step strong { display: block; margin-bottom: 4px; font-size: 13px; }
+
+  /* 生成按钮 */
+  .gen-wrap {
+    padding: 0 16px;
+    margin-bottom: 20px;
+  }
+  .gen-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--text);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    font-family: inherit;
+    opacity: .35;
+    pointer-events: none;
+  }
+  .gen-btn.ready { opacity: 1; pointer-events: all; }
+  .gen-btn.ready:active { transform: scale(.98); }
+
+  /* 装饰底部 */
+  .footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* 动画 */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .result-section.show { animation: fadeUp .4s ease; }
+</style>
+</head>
+<body>
+
+<!-- 顶部 -->
+<div class="hero">
+  <div class="hero-tag">AI 暖心伴成长 · 人工智能学院</div>
+  <h1>和 AI 辅导员<br>聊聊你的近况</h1>
+  <p>选几个选项，我们帮你生成<br>发给江小智的内容，不用自己打字</p>
+  <div class="hero-dots">
+    <span class="active"></span><span></span><span></span><span></span><span></span>
+  </div>
+</div>
+
+<!-- 进度 -->
+<div class="progress-wrap">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-text">
+    <span id="progressLabel">还没开始选择</span>
+    <span id="progressCount">0 / 5 题</span>
+  </div>
+</div>
+
+<!-- 问题 -->
+<div class="questions">
+
+  <!-- Q1 单选：整体状态（含正能量选项） -->
+  <div class="q-block" id="qb1">
+    <div class="q-num">QUESTION 01 · 单选</div>
+    <div class="q-title"><span class="emoji">🌤</span>最近你的整体状态是？</div>
+    <div class="options grid2">
+      <div class="opt" data-q="1" data-val="身心疲惫，有点撑不住" onclick="selectSingle(this)"><span class="opt-emoji">😮‍💨</span>疲惫</div>
+      <div class="opt" data-q="1" data-val="有些焦虑，心里不安稳" onclick="selectSingle(this)"><span class="opt-emoji">😰</span>焦虑</div>
+      <div class="opt" data-q="1" data-val="感到迷茫，不知道方向" onclick="selectSingle(this)"><span class="opt-emoji">😶‍🌫️</span>迷茫</div>
+      <div class="opt" data-q="1" data-val="情绪低落，提不起劲" onclick="selectSingle(this)"><span class="opt-emoji">😔</span>低落</div>
+      <div class="opt" data-q="1" data-val="压力比较大，有些喘不过气" onclick="selectSingle(this)"><span class="opt-emoji">😤</span>压力大</div>
+      <div class="opt" data-q="1" data-val="还算平静，一切还好" onclick="selectSingle(this)"><span class="opt-emoji">🙂</span>还好</div>
+      <div class="opt" data-q="1" data-val="状态不错，充满干劲" onclick="selectSingle(this)"><span class="opt-emoji">💪</span>充满干劲</div>
+      <div class="opt" data-q="1" data-val="心情愉快，最近很开心" onclick="selectSingle(this)"><span class="opt-emoji">😄</span>开心</div>
+      <div class="opt" data-q="1" data-val="感到满足，对现在很满意" onclick="selectSingle(this)"><span class="opt-emoji">🥰</span>满足</div>
+      <div class="opt" data-q="1" data-val="充满期待，对未来很有信心" onclick="selectSingle(this)"><span class="opt-emoji">🌟</span>充满期待</div>
+    </div>
+  </div>
+
+  <!-- Q2 多选：压力来源（含还好选项） -->
+  <div class="q-block" id="qb2">
+    <div class="q-num">QUESTION 02 · 可多选</div>
+    <div class="q-title"><span class="emoji">🎯</span>最近让你有感触的事情来自哪里？</div>
+    <div class="options">
+      <div class="opt" data-q="2" data-val="学业压力（课业、考试、成绩）" onclick="selectMulti(this)">📚 学业压力（课业、考试、成绩）</div>
+      <div class="opt" data-q="2" data-val="人际关系（朋友、室友、家人）" onclick="selectMulti(this)">🤝 人际关系（朋友、室友、家人）</div>
+      <div class="opt" data-q="2" data-val="对未来的迷茫（就业、方向、规划）" onclick="selectMulti(this)">🔭 对未来的迷茫（就业、方向、规划）</div>
+      <div class="opt" data-q="2" data-val="自我成长（想变得更好）" onclick="selectMulti(this)">💭 自我成长（想变得更好）</div>
+      <div class="opt" data-q="2" data-val="身体状态，影响了日常" onclick="selectMulti(this)">🌿 身体状态，影响了日常</div>
+      <div class="opt" data-q="2" data-val="兴趣爱好带来的成就感" onclick="selectMulti(this)">🎨 兴趣爱好带来的成就感</div>
+      <div class="opt" data-q="2" data-val="最近没什么特别的困扰，一切还好" onclick="selectMulti(this)">☀️ 没什么特别困扰，一切还好</div>
+    </div>
+  </div>
+
+  <!-- Q3 多选：最近做得不错的事 -->
+  <div class="q-block" id="qb3">
+    <div class="q-num">QUESTION 03 · 可多选</div>
+    <div class="q-title"><span class="emoji">✨</span>你觉得自己最近做得还不错的事？</div>
+    <div class="options grid2">
+      <div class="opt" data-q="3" data-val="坚持完成了一件困难的事" onclick="selectMulti(this)">💪 坚持下来了</div>
+      <div class="opt" data-q="3" data-val="主动照顾了身边的人" onclick="selectMulti(this)">🤗 照顾了别人</div>
+      <div class="opt" data-q="3" data-val="保持了一个好习惯" onclick="selectMulti(this)">⭐ 保持好习惯</div>
+      <div class="opt" data-q="3" data-val="在困难时没有放弃" onclick="selectMulti(this)">🌱 没有放弃</div>
+      <div class="opt" data-q="3" data-val="尝试了一件新事物" onclick="selectMulti(this)">🎨 尝试新事物</div>
+      <div class="opt" data-q="3" data-val="好好休息，照顾了自己" onclick="selectMulti(this)">😴 好好休息了</div>
+      <div class="opt" data-q="3" data-val="完成了一个让自己骄傲的成果" onclick="selectMulti(this)">🏆 有骄傲的成果</div>
+      <div class="opt" data-q="3" data-val="主动帮助了有需要的人" onclick="selectMulti(this)">🌻 帮助了别人</div>
+    </div>
+  </div>
+
+  <!-- Q4（原Q5）自由填写：让你开心或难过的事 -->
+  <div class="q-block" id="qb4">
+    <div class="q-num">QUESTION 04</div>
+    <div class="q-title"><span class="emoji">📝</span>最近有什么让你开心或难过的事？<br><span style="font-size:13px;font-weight:400;color:var(--muted)">用自己的话写一写，几个字也行</span></div>
+    <textarea
+      id="q4input"
+      placeholder="比如：考试没考好很沮丧；和朋友和好了很开心；终于完成了一个项目……"
+      oninput="handleTextarea(this,4)"
+      style="width:100%;min-height:100px;border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;font-size:14px;font-family:inherit;color:var(--text);background:var(--bg);resize:none;outline:none;line-height:1.7;transition:border-color .2s;"
+      onfocus="this.style.borderColor='var(--purple)'"
+      onblur="this.style.borderColor=this.value.trim()?'var(--purple)':'var(--border)'"
+    ></textarea>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:right" id="q4count">0 字</div>
+  </div>
+
+  <!-- Q5（原Q4）多选：希望得到什么 -->
+  <div class="q-block" id="qb5">
+    <div class="q-num">QUESTION 05 · 可多选</div>
+    <div class="q-title"><span class="emoji">💌</span>你希望 AI 辅导员给你什么？</div>
+    <div class="options">
+      <div class="opt" data-q="5" data-val="被理解和共情，感受到有人懂我" onclick="selectMulti(this)">🫂 被理解和共情，感受到有人懂我</div>
+      <div class="opt" data-q="5" data-val="一条具体可行的建议，帮我改变现状" onclick="selectMulti(this)">💡 一条具体可行的建议</div>
+      <div class="opt" data-q="5" data-val="一句有力量的鼓励，给我继续走下去的劲" onclick="selectMulti(this)">🔥 一句有力量的鼓励</div>
+      <div class="opt" data-q="5" data-val="帮我看到自己的闪光点和力量" onclick="selectMulti(this)">🌟 看到自己的闪光点</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 生成按钮 -->
+<div class="gen-wrap">
+  <button class="gen-btn" id="genBtn" onclick="generate()">✦ 生成我的发送内容</button>
+</div>
+
+<!-- 结果区域 -->
+<div class="result-section" id="resultSection">
+  <div class="result-card">
+    <div class="result-header">
+      <h3>你的内容已生成 🌿</h3>
+      <p>复制下面的文字，发给江小智即可</p>
+    </div>
+    <div class="result-body">
+      <div class="result-label">📋 复制这段话，发给江小智</div>
+      <div class="result-text" id="resultText"></div>
+      <button class="copy-btn" id="copyBtn" onclick="copyText()">
+        <span id="copyIcon">📋</span>
+        <span id="copyLabel">一键复制</span>
+      </button>
+      <div class="next-step">
+        <strong>📱 下一步怎么做</strong>
+        点击上方「一键复制」→ 打开江小智对话框 → 长按粘贴 → 发送<br>
+        收到 AI 辅导员的回复后，截图保存，凭截图可领取定制礼品 🎁
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">人工智能学院 · AI 暖心伴成长活动</div>
+
+<script>
+  // answers[1] = string (单选)
+  // answers[2/3/5] = Set (多选)
+  // answers[4] = string (填写)
+  const answers = { 2: new Set(), 3: new Set(), 5: new Set() };
+  const total = 5;
+
+  function selectSingle(el) {
+    const q = el.dataset.q;
+    document.querySelectorAll(`.opt[data-q="${q}"]`).forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    answers[1] = el.dataset.val;
+    document.getElementById('qb1').classList.add('answered');
+    updateProgress();
+  }
+
+  function selectMulti(el) {
+    const q = el.dataset.q;
+    const val = el.dataset.val;
+    const set = answers[q];
+    if (set.has(val)) {
+      set.delete(val);
+      el.classList.remove('selected');
+    } else {
+      set.add(val);
+      el.classList.add('selected');
+    }
+    document.getElementById('qb' + q).classList.toggle('answered', set.size > 0);
+    updateProgress();
+  }
+
+  function handleTextarea(el, q) {
+    const val = el.value.trim();
+    document.getElementById('q' + q + 'count').textContent = el.value.length + ' 字';
+    if (val.length > 0) {
+      answers[q] = val;
+      el.closest('.q-block').classList.add('answered');
+    } else {
+      delete answers[q];
+      el.closest('.q-block').classList.remove('answered');
+    }
+    updateProgress();
+  }
+
+  function isDone() {
+    return answers[1] &&
+      answers[2].size > 0 &&
+      answers[3].size > 0 &&
+      answers[4] &&
+      answers[5].size > 0;
+  }
+
+  function countDone() {
+    let n = 0;
+    if (answers[1]) n++;
+    if (answers[2].size > 0) n++;
+    if (answers[3].size > 0) n++;
+    if (answers[4]) n++;
+    if (answers[5].size > 0) n++;
+    return n;
+  }
+
+  function updateProgress() {
+    const done = countDone();
+    const pct = (done / total) * 100;
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressCount').textContent = done + ' / ' + total + ' 题';
+    const labels = ['还没开始', '已完成 1 题', '已完成 2 题', '已完成 3 题', '还差最后一题', '全部完成，可以生成了'];
+    document.getElementById('progressLabel').textContent = labels[done] || '全部完成';
+    document.querySelectorAll('.hero-dots span').forEach((s, i) => {
+      s.classList.toggle('active', i < done);
+    });
+    const btn = document.getElementById('genBtn');
+    if (isDone()) {
+      btn.classList.add('ready');
+      btn.textContent = '✦ 生成我的发送内容';
+    } else {
+      btn.classList.remove('ready');
+      btn.textContent = done < total ? `还差 ${total - done} 题` : '✦ 生成我的发送内容';
+    }
+  }
+
+  function generate() {
+    if (!isDone()) return;
+    const q2 = [...answers[2]].join('、');
+    const q3 = [...answers[3]].join('、');
+    const q5 = [...answers[5]].join('、');
+    const text =
+`请扮演青少年心理辅导师，根据以下内容生成一份温暖的心理健康报告：
+
+我最近的状态：${answers[1]}
+有感触的事情来自：${q2}
+最近做得不错的事：${q3}
+最近让我开心或难过的事：${answers[4]}
+我希望得到的：${q5}
+
+请严格按以下格式输出（500字左右）：
+
+致亲爱的同学：
+①情绪识别：
+②挑战分析：
+③你的力量：
+④成长建议：
+⑤送你一句话：`;
+
+    document.getElementById('resultText').textContent = text;
+    const sec = document.getElementById('resultSection');
+    sec.classList.add('show');
+    setTimeout(() => sec.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  }
+
+  function copyText() {
+    const text = document.getElementById('resultText').textContent;
+    const btn = document.getElementById('copyBtn');
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => showCopied(btn));
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      try { document.execCommand('copy'); showCopied(btn); } catch(e) {}
+      document.body.removeChild(ta);
+    }
+  }
+
+  function showCopied(btn) {
+    btn.classList.add('copied');
+    document.getElementById('copyIcon').textContent = '✅';
+    document.getElementById('copyLabel').textContent = '已复制！去发给江小智吧';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      document.getElementById('copyIcon').textContent = '📋';
+      document.getElementById('copyLabel').textContent = '一键复制';
+    }, 3000);
+  }
+
+  updateProgress();
+</script>
+</body>
+</html>
